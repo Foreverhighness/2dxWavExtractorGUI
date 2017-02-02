@@ -13,7 +13,6 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
-using System.Windows.Shapes;
 
 namespace WPF1
 {
@@ -22,8 +21,6 @@ namespace WPF1
     /// </summary>
     public partial class MainWindow : Window
     {
-        static int outputFileNumber = 1;
-
         public MainWindow()
         {
             InitializeComponent();
@@ -34,7 +31,7 @@ namespace WPF1
 
         private void DirectoryRadioButton_Click(object sender, RoutedEventArgs e)
         {
-            FileTextBox.Text = "";
+            FileTextBox.Text = string.Empty;
 
             FileRadioButton.IsChecked = false;
             FileTextBox.IsEnabled = false;
@@ -46,7 +43,7 @@ namespace WPF1
 
         private void FileRadioButton_Click(object sender, RoutedEventArgs e)
         {
-            DirectoryTextBox.Text = "";
+            DirectoryTextBox.Text = string.Empty;
 
             FileRadioButton.IsChecked = true;
             FileTextBox.IsEnabled = true;
@@ -58,12 +55,12 @@ namespace WPF1
 
         private void MyButton_Click(object sender, RoutedEventArgs e)
         {
-            if (FileTextBox.Text != "")
+            if (FileTextBox.Text != string.Empty)
             {
                 Solve(FileTextBox.Text, TextBox.Text);
                 MessageBox.Show("OK");
             }
-            else if (DirectoryTextBox.Text != "")
+            else if (DirectoryTextBox.Text != string.Empty)
             {
                 DirectoryInfo myDirectoryInfo = new DirectoryInfo(DirectoryTextBox.Text);
                 foreach (FileInfo file in myDirectoryInfo.GetFiles("*.2dx"))
@@ -113,20 +110,25 @@ namespace WPF1
 
         public void Solve(string inputFilePath, string outputPath)
         {
-            string riff = "RIFF";
-            int musicNumber = 1;
-            byte[] myByte = new byte[4];
             FileStream inputFileStream = null;
             try
             {
+                outputPath = Path.Combine(outputPath, Path.GetFileNameWithoutExtension(inputFilePath));
+                //MessageBox.Show(outputPath);
                 inputFileStream = new FileStream(inputFilePath, FileMode.Open);
+                if (!Directory.Exists(outputPath))
+                    Directory.CreateDirectory(outputPath);
             }
             catch (Exception e)
             {
                 MessageBox.Show(e.Message);
             }
+
             try
             {
+                const string riff = "RIFF";
+                int musicNumber = 1;
+                byte[] myByte = new byte[4];
                 while (inputFileStream.Read(myByte, 0, 4) != 0)
                 {
                     if (Encoding.Default.GetString(myByte) == riff)
@@ -137,11 +139,7 @@ namespace WPF1
 
 
                         // 文件输出位置调整
-                        string outputFileName = outputPath;
-                        if (outputFileName == "")
-                            outputFileName = string.Format("{0}_{1}.wav", outputFileNumber, musicNumber++);
-                        else
-                            outputFileName += string.Format("\\{0}_{1}.wav", outputFileNumber, musicNumber++);
+                        string outputFileName = Path.Combine(outputPath, string.Format("{0}.wav", musicNumber++));
 
                         FileStream outputFileStream = null;
                         try
@@ -173,7 +171,6 @@ namespace WPF1
             {
                 inputFileStream.Close();
             }
-            outputFileNumber++;
         }
 
     }
